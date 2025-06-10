@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="Iphone.css">
+    <title>AppleHub - купить Iphone</title>
+</head>
+<body>
+    <header>
+        <div class="logo">AppleHub</div>
+        <div class="search-cart">
+            <input type="text" id="search" placeholder="Поиск iPhone...">
+            <button class="cart-btn" id="open-cart">
+                Корзина <span class="cart-count" id="cart-count">0</span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <h1>Каталог iPhone</h1>
+        <div class="products" id="products-container">
+            <!-- Товары будут добавляться через JavaScript -->
+        </div>
+    </main>
+
+    <div class="cart-modal" id="cart-modal">
+        <div class="cart-header">
+            <h2>Ваша корзина</h2>
+            <button class="close-cart" id="close-cart">&times;</button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Товары в корзине будут добавляться через JavaScript -->
+            <p>Ваша корзина пуста</p>
+        </div>
+        <div class="cart-total" id="cart-total">
+            Итого: 0 ₽
+        </div>
+        <button class="checkout-btn">Оформить заказ</button>
+    </div>
+
+    <script>
+        // Данные товаров
+        const products = [
+            {
+                id: 1,
+                title: "iPhone 15 Pro",
+                price: 99990,
+                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1693009279096",
+                stock: 10
+            },
+            {
+                id: 2,
+                title: "iPhone 15",
+                price: 79990,
+                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/iphone-15-finish-select-202309-6-1inch-pink?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1692926963883",
+                stock: 15
+            },
+            {
+                id: 3,
+                title: "iPhone 14 Pro",
+                price: 89990,
+                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/iphone-14-pro-finish-select-202209-6-1inch?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1660754004992",
+                stock: 8
+            },
+            {
+                id: 4,
+                title: "iPhone 14",
+                price: 69990,
+                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/iphone-14-finish-select-202209-6-1inch-blue?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1660754004996",
+                stock: 12
+            },
+            {
+                id: 5,
+                title: "iPhone 13",
+                price: 59990,
+                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/iphone-13-finish-select-202207-6-1inch-pink?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1657642502204",
+                stock: 5
+            },
+            {
+                id: 6,
+                title: "iPhone SE",
+                price: 44990,
+                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/iphone-se-finish-select-202207-midnight?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1654894259855",
+                stock: 20
+            }
+        ];
+
+        // Корзина
+        let cart = [];
+
+        // DOM элементы
+        const productsContainer = document.getElementById('products-container');
+        const searchInput = document.getElementById('search');
+        const cartModal = document.getElementById('cart-modal');
+        const openCartBtn = document.getElementById('open-cart');
+        const closeCartBtn = document.getElementById('close-cart');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartCount = document.getElementById('cart-count');
+        const cartTotal = document.getElementById('cart-total');
+
+        // Отображение товаров
+        function renderProducts(productsToRender) {
+            productsContainer.innerHTML = '';
+            
+            if (productsToRender.length === 0) {
+                productsContainer.innerHTML = '<div class="no-results">Товары не найдены</div>';
+                return;
+            }
+            
+            productsToRender.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                productCard.innerHTML = `
+                    <img src="${product.image}" alt="${product.title}" class="product-img">
+                    <div class="product-info">
+                        <h3 class="product-title">${product.title}</h3>
+                        <p class="product-price">${product.price.toLocaleString()} ₽</p>
+                        <p class="product-stock">В наличии: ${product.stock} шт.</p>
+                        <button class="add-to-cart" data-id="${product.id}">Добавить в корзину</button>
+                    </div>
+                `;
+                productsContainer.appendChild(productCard);
+            });
+            
+            // Добавляем обработчики событий для кнопок "Добавить в корзину"
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', addToCart);
+            });
+        }
+
+        // Добавление товара в корзину
+        function addToCart(e) {
+            const productId = parseInt(e.target.getAttribute('data-id'));
+            const product = products.find(p => p.id === productId);
+            
+            if (!product) return;
+            
+            // Проверяем, есть ли уже такой товар в корзине
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                // Проверяем, есть ли товар в наличии
+                if (existingItem.quantity < product.stock) {
+                    existingItem.quantity += 1;
+                } else {
+                    alert('Достигнуто максимальное количество товара в наличии');
+                    return;
+                }
+            } else {
+                cart.push({
+                    id: product.id,
+                    title: product.title,
+                    price: product.price,
+                    image: product.image,
+                    quantity: 1
+                });
+            }
+            
+            updateCart();
+        }
+
+        // Обновление корзины
+        function updateCart() {
+            // Обновляем счетчик корзины
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCount.textContent = totalItems;
+            
+            // Обновляем содержимое корзины
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p>Ваша корзина пуста</p>';
+            } else {
+                cartItemsContainer.innerHTML = '';
+                cart.forEach(item => {
+                    const cartItem = document.createElement('div');
+                    cartItem.className = 'cart-item';
+                    cartItem.innerHTML = `
+                        <img src="${item.image}" alt="${item.title}" class="cart-item-img">
+                        <div class="cart-item-info">
+                            <h4 class="cart-item-title">${item.title}</h4>
+                            <p class="cart-item-price">${item.price.toLocaleString()} ₽</p>
+                            <div class="cart-item-quantity">
+                                <button class="quantity-btn minus" data-id="${item.id}">-</button>
+                                <span>${item.quantity}</span>
+                                <button class="quantity-btn plus" data-id="${item.id}">+</button>
+                            </div>
+                        </div>
+                    `;
+                    cartItemsContainer.appendChild(cartItem);
+                });
+                
+                // Добавляем обработчики событий для кнопок +/- в корзине
+                document.querySelectorAll('.quantity-btn.minus').forEach(button => {
+                    button.addEventListener('click', decreaseQuantity);
+                });
+                
+                document.querySelectorAll('.quantity-btn.plus').forEach(button => {
+                    button.addEventListener('click', increaseQuantity);
+                });
+            }
+            
+            // Обновляем итоговую сумму
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            cartTotal.textContent = `Итого: ${total.toLocaleString()} ₽`;
+        }
+
+        // Уменьшение количества товара в корзине
+        function decreaseQuantity(e) {
+            const productId = parseInt(e.target.getAttribute('data-id'));
+            const item = cart.find(item => item.id === productId);
+            
+            if (item.quantity > 1) {
+                item.quantity -= 1;
+            } else {
+                // Удаляем товар из корзины, если количество становится 0
+                cart = cart.filter(item => item.id !== productId);
+            }
+            
+            updateCart();
+        }
+
+        // Увеличение количества товара в корзине
+        function increaseQuantity(e) {
+            const productId = parseInt(e.target.getAttribute('data-id'));
+            const item = cart.find(item => item.id === productId);
+            const product = products.find(p => p.id === productId);
+            
+            // Проверяем, есть ли товар в наличии
+            if (item.quantity < product.stock) {
+                item.quantity += 1;
+            } else {
+                alert('Достигнуто максимальное количество товара в наличии');
+            }
+            
+            updateCart();
+        }
+
+        // Поиск товаров
+        function searchProducts() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredProducts = products.filter(product => 
+                product.title.toLowerCase().includes(searchTerm)
+            );
+            renderProducts(filteredProducts);
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProducts(products);
+            
+            // Обработчики событий
+            searchInput.addEventListener('input', searchProducts);
+            openCartBtn.addEventListener('click', () => {
+                cartModal.style.display = 'block';
+            });
+            closeCartBtn.addEventListener('click', () => {
+                cartModal.style.display = 'none';
+            });
+            
+            // Закрытие корзины при клике вне ее области
+            window.addEventListener('click', (e) => {
+                if (e.target === cartModal) {
+                    cartModal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+     <script src="korzina.js"></script>
+</body>
+</html>

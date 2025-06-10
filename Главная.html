@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="glav.css">
+    <title>AppleHub - Официальный магазин Apple техники</title>
+   
+</head>
+<body>
+    <header>
+        <div class="logo">AppleHub</div>
+        <nav>
+            <ul>
+                <li><a href="iphone.html">iPhone</a></li>
+                <li><a href="mac.html">MacBook</a></li>
+                <li><a href="watch.html">Apple Watch</a></li>
+                <li><a href="airpods.html">AirPods</a></li>
+            </ul>
+        </nav>
+        <div class="search-cart">
+            <input type="text" id="search" placeholder="Поиск товаров...">
+            <button class="cart-btn" id="open-cart">
+                Корзина <span class="cart-count" id="cart-count">0</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>Новейшая техника Apple</h1>
+        <p>Откройте для себя инновационные продукты с непревзойденным качеством и производительностью</p>
+        <a href="#new-arrivals" class="btn">Смотреть новинки</a>
+    </section>
+
+  
+
+    <section class="new-arrivals" id="new-arrivals">
+        <h2 class="section-title">Новинки</h2>
+        <div class="products-grid" id="new-products">
+            <!-- Новинки будут добавляться через JavaScript -->
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-links">
+            <a href="#">О компании</a>
+            <a href="#">Контакты</a>
+            <a href="#">Доставка и оплата</a>
+            <a href="#">Гарантия</a>
+            <a href="#">Отзывы</a>
+        </div>
+        <p class="copyright">© 2025 iStore. Все права защищены.</p>
+    </footer>
+
+    <div class="cart-modal" id="cart-modal">
+        <div class="cart-header">
+            <h2>Ваша корзина</h2>
+            <button class="close-cart" id="close-cart">&times;</button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Товары в корзине будут добавляться через JavaScript -->
+            <p>Ваша корзина пуста</p>
+        </div>
+        <div class="cart-total" id="cart-total">
+            Итого: 0 ₽
+        </div>
+        <button class="checkout-btn">Оформить заказ</button>
+    </div>
+
+    <script>
+        // Данные новинок
+        const newProducts = [
+            {
+                id: 1,
+                title: "iPhone 15 Pro Max",
+                price: 129990,
+                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1693009279096",
+                isNew: true
+            },
+            {
+                id: 2,
+                title: "MacBook Air 15'' M2",
+                price: 149990,
+                image: "https://avatars.mds.yandex.net/get-mpic/13964805/2a00000191d88dddd0d389e8bae754096bff/orig",
+                isNew: true
+            },
+            {
+                id: 3,
+                title: "Apple Watch Series 9",
+                price: 45990,
+                image: "https://avatars.mds.yandex.net/i?id=f95ad3381f7741023089360a8d9b1c4a_l-7544273-images-thumbs&n=13",
+                isNew: true
+            },
+            {
+                id: 4,
+                title: "AirPods Pro (2nd generation)",
+                price: 24990,
+                image: "https://iphone24.ru/userfiles/images/Airpods-Pro-PNG-File-1.jpg",
+                isNew: true
+            }
+        ];
+
+       </script>
+
+       
+
+<!-- Чат поддержки -->
+<div class="chat-container" id="chat-container">
+<div class="chat-header" id="chat-header">
+  <span>Чат поддержки</span>
+  <i class="fas fa-times" id="close-chat"></i>
+</div>
+<div class="chat-body" id="chat-body">
+  <div class="chat-messages" id="chat-messages">
+      <div class="message bot-message">
+          Здравствуйте! Чем могу помочь?
+      </div>
+      <div class="typing-indicator" id="typing-indicator">
+          Сотрудник печатает...
+      </div>
+  </div>
+  <div class="chat-input">
+      <input type="text" id="message-input" placeholder="Введите ваше сообщение...">
+      <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+  
+
+
+</div>
+</div>
+
+<div class="chat-toggle" id="chat-toggle">
+<i class="fas fa-comments fa-lg"></i>
+</div>
+
+<script>
+// JavaScript код будет здесь
+document.addEventListener('DOMContentLoaded', function() {
+  const chatContainer = document.getElementById('chat-container');
+  const chatHeader = document.getElementById('chat-header');
+  const chatBody = document.getElementById('chat-body');
+  const chatMessages = document.getElementById('chat-messages');
+  const messageInput = document.getElementById('message-input');
+  const sendButton = document.getElementById('send-button');
+  const chatToggle = document.getElementById('chat-toggle');
+  const closeChat = document.getElementById('close-chat');
+  const typingIndicator = document.getElementById('typing-indicator');
+  
+  let isChatOpen = false;
+  
+  // Открытие/закрытие чата
+  chatToggle.addEventListener('click', function() {
+      isChatOpen = true;
+      chatContainer.classList.add('chat-active');
+      chatToggle.style.display = 'none';
+      messageInput.focus();
+  });
+  
+  closeChat.addEventListener('click', function() {
+      isChatOpen = false;
+      chatContainer.classList.remove('chat-active');
+      chatToggle.style.display = 'flex';
+  });
+  
+  // Отправка сообщения
+  function sendMessage() {
+      const messageText = messageInput.value.trim();
+      if (messageText === '') return;
+      
+      // Добавляем сообщение пользователя
+      addMessage(messageText, 'user');
+      messageInput.value = '';
+      
+      // Показываем индикатор набора текста
+      typingIndicator.style.display = 'block';
+      
+      // Имитация ответа поддержки (в реальном приложении здесь будет запрос к серверу)
+      setTimeout(function() {
+          typingIndicator.style.display = 'none';
+          
+    // Простые ответы бота
+      let botResponse;
+      if (messageText.toLowerCase().includes('привет') || 
+          messageText.toLowerCase().includes('здравствуйте')) {
+        botResponse = 'Здравствуйте! Чем могу помочь?';
+      } else if (messageText.toLowerCase().includes('цена') || 
+                messageText.toLowerCase().includes('стоимость')) {
+        botResponse = 'Цены на все товары указаны в карточках товаров. Также у нас часто бывают акции!';
+      } else if (messageText.toLowerCase().includes('доставка')) {
+        botResponse = 'Доставка осуществляется в течение 1-3 дней по всей России. Стоимость доставки - 500 руб.';
+      } else if (messageText.toLowerCase().includes('гарантия')) {
+        botResponse = 'На всю технику Apple предоставляется официальная гарантия 1 год.';
+      } else if (messageText.toLowerCase().includes('контакт') || 
+                messageText.toLowerCase().includes('связаться')) {
+        botResponse = 'Вы можете связаться с нами по телефону +7 (495) 123-45-67 или email support@applestore.example.com';
+      } else {
+        botResponse = 'Спасибо за ваше сообщение! Наш сотрудник скоро с вами свяжется.';
+      }
+      
+      addMessage(botResponse, 'bot');
+    }, 1500);
+  }
+  
+  // Добавление сообщения в чат
+  function addMessage(text, sender) {
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message');
+      messageElement.classList.add(sender + '-message');
+      messageElement.textContent = text;
+      chatMessages.appendChild(messageElement);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  
+  // Обработчики событий
+  sendButton.addEventListener('click', sendMessage);
+  
+  messageInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+          sendMessage();
+      }
+  });
+  
+  // Имитация первого с
+
+  setTimeout(function() {
+      if (!isChatOpen) {
+          chatToggle.innerHTML = '<i class="fas fa-comments fa-lg"></i><span class="notification-badge">1</span>';
+      }
+  }, 5000);
+});
+</script>
+
+       <script src="korzina.js"></script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppleHub - Купить MacBook</title>
+    <link rel="stylesheet" href="mac.css">
+</head>
+<body>
+    <header>
+        <div class="logo">AppleHub</div>
+        <div class="search-container">
+            <input type="text" id="search" placeholder="Поиск MacBook...">
+        </div>
+        <button class="cart-btn" id="open-cart">
+            Корзина <span class="cart-count" id="cart-count">0</span>
+        </button>
+    </header>
+
+    <main>
+        <h1>MacBook в наличии</h1>
+        <div class="products-grid" id="products-grid">
+            <!-- Товары будут добавлены через JavaScript -->
+        </div>
+    </main>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="cart-modal" id="cart-modal">
+        <div class="cart-header">
+            <div class="cart-title">Ваша корзина</div>
+            <button class="close-cart" id="close-cart">&times;</button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Товары в корзине будут добавлены через JavaScript -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Итого:</span>
+                <span id="cart-total">0 ₽</span>
+            </div>
+            <button class="checkout-btn">Оформить заказ</button>
+        </div>
+    </div>
+
+    <script>
+        // Данные о товарах
+        const products = [
+            {
+                id: 1,
+                title: "MacBook Air 13 M1",
+                price: 89990,
+                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/macbook-air-gold-select-201810?wid=904&hei=840&fmt=jpeg&qlt=90&.v=1664472289661",
+                stock: 5
+            },
+            {
+                id: 2,
+                title: "MacBook Air 15 M2",
+                price: 129990,
+                image: "https://avatars.mds.yandex.net/get-mpic/13964805/2a00000191d88dddd0d389e8bae754096bff/orig",
+                stock: 3
+            },
+            {
+                id: 3,
+                title: "MacBook Pro 14 M3",
+                price: 199990,
+                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/mbp14-silver-select-202310?wid=904&hei=840&fmt=jpeg&qlt=90&.v=1697230830948",
+                stock: 2
+            },
+            {
+                id: 4,
+                title: "MacBook Pro 16 M3 Pro",
+                price: 249990,
+                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/mbp14-silver-select-202310?wid=904&hei=840&fmt=jpeg&qlt=90&.v=1697230830948",
+                stock: 1
+            },
+            {
+                id: 5,
+                title: "MacBook Pro 13 M2",
+                price: 129990,
+                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/mbp14-silver-select-202310?wid=904&hei=840&fmt=jpeg&qlt=90&.v=1697230830948",
+                stock: 4
+            },
+            {
+                id: 6,
+                title: "MacBook Air 13 M2",
+                price: 109990,
+                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/macbook-air-midnight-select-20220606?wid=904&hei=840&fmt=jpeg&qlt=90&.v=1653084303665",
+                stock: 0
+            }
+        ];
+
+        // Корзина
+        let cart = [];
+
+        // DOM элементы
+        const productsGrid = document.getElementById('products-grid');
+        const searchInput = document.getElementById('search');
+        const cartCount = document.getElementById('cart-count');
+        const openCartBtn = document.getElementById('open-cart');
+        const closeCartBtn = document.getElementById('close-cart');
+        const cartModal = document.getElementById('cart-modal');
+        const overlay = document.getElementById('overlay');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotal = document.getElementById('cart-total');
+
+        // Отображение товаров
+        function displayProducts(productsToDisplay) {
+            productsGrid.innerHTML = '';
+            
+            if (productsToDisplay.length === 0) {
+                productsGrid.innerHTML = '<div class="no-results">Ничего не найдено. Попробуйте изменить поисковый запрос.</div>';
+                return;
+            }
+            
+            productsToDisplay.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                
+                productCard.innerHTML = `
+                    <img src="${product.image}" alt="${product.title}" class="product-image">
+                    <div class="product-info">
+                        <h3 class="product-title">${product.title}</h3>
+                        <p class="product-price">${product.price.toLocaleString()} ₽</p>
+                        <p class="product-stock ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}">
+                            ${product.stock > 0 ? `В наличии: ${product.stock} шт.` : 'Нет в наличии'}
+                        </p>
+                        <button class="add-to-cart" data-id="${product.id}" ${product.stock === 0 ? 'disabled' : ''}>
+                            ${product.stock > 0 ? 'Добавить в корзину' : 'Нет в наличии'}
+                        </button>
+                    </div>
+                `;
+                
+                productsGrid.appendChild(productCard);
+            });
+            
+            // Добавляем обработчики событий для кнопок "Добавить в корзину"
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', addToCart);
+            });
+        }
+
+        // Добавление товара в корзину
+        function addToCart(e) {
+            const productId = parseInt(e.target.getAttribute('data-id'));
+            const product = products.find(p => p.id === productId);
+            
+            if (!product) return;
+            
+            // Проверяем, есть ли товар уже в корзине
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                // Проверяем, не превышает ли количество доступное количество
+                if (existingItem.quantity < product.stock) {
+                    existingItem.quantity += 1;
+                } else {
+                    alert('Достигнуто максимальное количество товара в наличии');
+                    return;
+                }
+            } else {
+                cart.push({
+                    id: product.id,
+                    title: product.title,
+                    price: product.price,
+                    image: product.image,
+                    quantity: 1,
+                    stock: product.stock
+                });
+            }
+            
+            updateCart();
+            saveCartToLocalStorage();
+        }
+
+        // Обновление корзины
+        function updateCart() {
+            // Обновляем счетчик корзины
+            const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+            cartCount.textContent = totalItems;
+            
+            // Обновляем содержимое корзины
+            cartItemsContainer.innerHTML = '';
+            
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p style="text-align: center; color: #86868b;">Ваша корзина пуста</p>';
+                cartTotal.textContent = '0 ₽';
+                return;
+            }
+            
+            let totalPrice = 0;
+            
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                totalPrice += itemTotal;
+                
+                const cartItem = document.createElement('div');
+                cartItem.className = 'cart-item';
+                
+                cartItem.innerHTML = `
+                    <img src="${item.image}" alt="${item.title}" class="cart-item-image">
+                    <div class="cart-item-details">
+                        <h4 class="cart-item-title">${item.title}</h4>
+                        <p class="cart-item-price">${item.price.toLocaleString()} ₽</p>
+                        <div class="cart-item-quantity">
+                            <button class="quantity-btn minus" data-id="${item.id}">-</button>
+                            <input type="text" class="quantity-input" value="${item.quantity}" readonly>
+                            <button class="quantity-btn plus" data-id="${item.id}" ${item.quantity >= item.stock ? 'disabled' : ''}>+</button>
+                        </div>
+                        <button class="remove-item" data-id="${item.id}">Удалить</button>
+                    </div>
+                `;
+                
+                cartItemsContainer.appendChild(cartItem);
+            });
+            
+            // Обновляем итоговую сумму
+            cartTotal.textContent = `${totalPrice.toLocaleString()} ₽`;
+            
+            // Добавляем обработчики событий для кнопок в корзине
+            document.querySelectorAll('.minus').forEach(button => {
+                button.addEventListener('click', decreaseQuantity);
+            });
+            
+            document.querySelectorAll('.plus').forEach(button => {
+                button.addEventListener('click', increaseQuantity);
+            });
+            
+            document.querySelectorAll('.remove-item').forEach(button => {
+                button.addEventListener('click', removeItem);
+            });
+        }
+
+        // Уменьшение количества товара
+        function decreaseQuantity(e) {
+            const productId = parseInt(e.target.getAttribute('data-id'));
+            const item = cart.find(item => item.id === productId);
+            
+            if (item && item.quantity > 1) {
+                item.quantity -= 1;
+                updateCart();
+                saveCartToLocalStorage();
+            } else if (item && item.quantity === 1) {
+                removeItem(e);
+            }
+        }
+
+        // Увеличение количества товара
+        function increaseQuantity(e) {
+            const productId = parseInt(e.target.getAttribute('data-id'));
+            const item = cart.find(item => item.id === productId);
+            
+            if (item && item.quantity < item.stock) {
+                item.quantity += 1;
+                updateCart();
+                saveCartToLocalStorage();
+            } else {
+                alert('Достигнуто максимальное количество товара в наличии');
+            }
+        }
+
+        // Удаление товара из корзины
+        function removeItem(e) {
+            const productId = parseInt(e.target.getAttribute('data-id'));
+            cart = cart.filter(item => item.id !== productId);
+            updateCart();
+            saveCartToLocalStorage();
+        }
+
+        // Поиск товаров
+        function searchProducts() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredProducts = products.filter(product => 
+                product.title.toLowerCase().includes(searchTerm)
+            );
+            displayProducts(filteredProducts);
+        }
+
+        // Сохранение корзины в localStorage
+        function saveCartToLocalStorage() {
+            localStorage.setItem('macbookCart', JSON.stringify(cart));
+        }
+
+        // Загрузка корзины из localStorage
+        function loadCartFromLocalStorage() {
+            const savedCart = localStorage.getItem('macbookCart');
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+                updateCart();
+            }
+        }
+
+        // Инициализация
+        function init() {
+            displayProducts(products);
+            loadCartFromLocalStorage();
+            
+            // Обработчики событий
+            searchInput.addEventListener('input', searchProducts);
+            
+            openCartBtn.addEventListener('click', () => {
+                cartModal.style.display = 'flex';
+                overlay.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            });
+            
+            closeCartBtn.addEventListener('click', () => {
+                cartModal.style.display = 'none';
+                overlay.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+            
+            overlay.addEventListener('click', () => {
+                cartModal.style.display = 'none';
+                overlay.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+        }
+
+        // Запуск приложения
+        init();
+    </script>
+</body>
+</html>
